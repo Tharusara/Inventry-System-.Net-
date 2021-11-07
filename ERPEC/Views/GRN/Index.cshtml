@@ -1,0 +1,614 @@
+﻿
+@{
+    ViewBag.Title = "Index";
+}
+
+<form role="form" id="formGRN">
+    <div class="card-body">
+        <div class="row">
+            <div class="form-group col-md-2">
+                <label for="grnCode">GRN Code</label>
+                <input type="text" class="form-control" id="grnCode" name="GRN_H_Code" readonly>
+                <input type="hidden" class="form-control" id="grnID" name="GRN_ID" value="0">
+            </div>
+            <div class="form-group col-md-5">
+                <label>Select Location</label>
+                <select class="form-control" name="GRN_H_Location" id="grnLocation"></select>
+            </div>
+            <div class="form-group col-md-5">
+                <label>Select Supplier</label>
+                <select class="form-control" name="GRN_H_Supplier" id="grnSupplier"></select>
+            </div>
+        </div>
+        <div class="row">
+            <div class="form-group col-md-2">
+                <label for="itmCode">Item Code</label>
+                <input type="text" class="form-control" id="itmCode" name="Item_code">
+            </div>
+            <div class="form-group col-md-7">
+                <label>Select Item</label>
+                <select class="form-control" name="GRN_D_Item" id="item"></select>
+            </div>
+            <div class="form-group col-md-1">
+                <label for="Qty">Item Qty</label>
+                <input type="text" class="form-control" id="Qty" name="itm_qty" value="0.00">
+            </div>
+            <div class="form-group col-md-1">
+                <label for="itmPrice">Item Price</label>
+                <input type="text" class="form-control" id="itmPrice" name="itmPrice" value="0.00">
+            </div>
+            <div class="form-group col-md-1" style="margin-top: 15px;margin-bottom: 0px;">
+                <a class="btn btn-app bg-gradient-info" id="btnAddItem">
+                    <i class="fas fa-plus"></i>Add
+                </a>
+            </div>
+           
+        </div>
+    </div>
+    <!-- /.card-body -->
+
+    <div class="card-footer">
+        <div class="row">
+            <div class="col-md-3">
+                <button type="button" class="btn btn-block bg-gradient-warning btn-lg" id="btnLoadPO" data-toggle="modal" data-target="#modalLoadPO">Load From PO</button>
+                <input type="hidden" class="form-control" id="poID" name="PO_ID" value="0">
+            </div>
+            <div class="col-md-3">
+                <button type="button" class="btn btn-block bg-gradient-primary btn-lg" id="btnNew">New GRN</button>
+            </div>
+            <div class="col-md-3">
+                <button type="button" class="btn btn-block bg-gradient-success btn-lg" id="btnSave">Save GRN</button>
+            </div>
+            <div class="col-md-3">
+                <button type="button" class="btn btn-block bg-gradient-info btn-lg" id="btnSearch" data-toggle="modal" data-target="#modalGRNSearch">Search GRN</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">GRN Items</h3>
+    </div>
+    <!-- /.card-header -->
+    <div class="card-body">
+        <div id="tbsupplier_wrapper" class="dataTables_wrapper dt-bootstrap4">
+            <div class="row">
+                <div class="col-sm-12">
+                    <table id="tbItems" class="hover" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Item ID</th>
+                                <th>Item Code</th>
+                                <th>Item Name</th>
+                                <th>Item Qty</th>
+                                <th>Item Price</th>
+                                <th>Item Value</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /.card-body -->
+</div>
+
+<div class="modal fade" id="modalGRNSearch" tabindex="-1" role="dialog" aria-labelledby="modalGRNSearchTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalGRNSearchTitle">Search PO</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="card">
+                    <div class="card-body">
+                        <div id="tbItems_wrapper" class="dataTables_wrapper dt-bootstrap4">
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <table id="tbGRN" class="hover" style="width:100%">
+                                        <thead>
+                                            <tr>
+                                                <th>GRN ID</th>
+                                                <th>GRN Code</th>
+                                                <th>GRN Date</th>
+                                                <th>GRN Value</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- /.card-body -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalLoadPO" tabindex="-1" role="dialog" aria-labelledby="modalLoadPOTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalLoadPOTitle">Load PO</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="card">
+                    <div class="card-body">
+                        <div id="tbItems_wrapper" class="dataTables_wrapper dt-bootstrap4">
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <table id="tbPO" class="hover" style="width:100%">
+                                        <thead>
+                                            <tr>
+                                                <th>PO ID</th>
+                                                <th>PO Code</th>
+                                                <th>PO Date</th>
+                                                <th>PO Value</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- /.card-body -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section FooterScripts{
+<script type="text/javascript">
+    var Items = [];
+
+
+    $(document).ready(function () {
+        LoadActiveLocations();
+        LoadActiveItems();
+        LoadActiveSuppliers();
+
+        var table=$('#tbItems').DataTable({
+            "columnDefs": [
+                {
+                    "targets": [0],
+                    "visible": false,
+                    "searchable": false,
+                },
+                {
+                    "targets": [1],
+                    className: 'dt-head-center',
+                },
+                {
+                    "targets": [2],
+                    className: 'dt-head-center',
+                },
+                {
+                    "targets": [3],
+                    className: 'dt-head-center dt-body-right',
+                    render: $.fn.dataTable.render.number(',', '.', 2),
+                },
+                {
+                    "targets": [4],
+                    className: 'dt-head-center dt-body-right',
+                    render: $.fn.dataTable.render.number(',', '.', 2, 'Rs.'),
+                },
+                {
+                    "targets": [5],
+                    className: 'dt-head-center dt-body-right',
+                    render: $.fn.dataTable.render.number(',', '.', 2, 'Rs.'),
+                },
+                {
+                    "targets": [6],
+                    className: 'dt-head-center dt-body-center',
+                }
+            ]
+        });
+
+        $('#tbItems tbody').on('click', '.rmvBtn', function () {
+            var da = table.row({ selected: true }).data();
+            removeItem(da[0]);
+        });
+
+        //Modal
+        var tablegrn = $('#tbGRN').DataTable({
+            "columnDefs": [
+                {
+                    "targets": [0],
+                    "visible": false,
+                    "searchable": false,
+                }
+            ]
+        });
+        $('#tbGRN tbody').on('click', 'tr', function () {
+            var da = tablegrn.row(this).data();
+            LoadGRN(da[0]);
+        });
+
+        var tablepo = $('#tbPO').DataTable({
+            "columnDefs": [
+                {
+                    "targets": [0],
+                    "visible": false,
+                    "searchable": false,
+                }
+            ]
+        });
+        $('#tbPO tbody').on('click', 'tr', function () {
+            var da = tablepo.row(this).data();
+            LoadPO(da[0]);
+        });
+    });
+    //end of docredy
+    $(document).on('change', 'select[name="GRN_D_Item"]', function (e) {
+        e.preventDefault();
+        if($("#item option:selected").val() != 0) {
+            LoadItem();
+        }
+    });
+
+    $(document).on('click', '#btnAddItem', function (e) {
+        e.preventDefault();
+        var msg = ValidateInputs();
+        if (msg != "") {
+            Swal.fire({
+                position: 'top-end',
+                icon: 'error',
+                title: msg,
+                showConfirmButton: false,
+                timer: 2500,
+                toast: true,
+            });
+        }
+        else {
+            PreLoadItmes();
+        }
+        AddDatatoGrid();
+    });
+
+
+    $(document).on('keypress', '#itmCode', function (e) {
+        if (e.which == 13) {
+            e.preventDefault();
+            if ($('#itmCode').val() == '')
+                Swal.fire({
+                    position: 'top-end',
+                    icon: 'error',
+                    title: "Please Enter Item Code",
+                    showConfirmButton: false,
+                    timer: 2500,
+                    toast: true,
+                });
+            else {
+                LoadItemByCode();
+            }
+        }
+    });
+
+    $(document).on('click', '#btnNew', function (e) {
+        restFileds();
+    });
+
+    $(document).on('click', '#btnSave ', function (e) {
+               
+            var grnHnItems = {
+            GRN_H_Location: $('#grnLocation').val(),
+            GRN_H_Supplier: $('#grnSupplier').val(),
+            GRN_H_Code: $('#grnCode').val(),
+            GRN_H_Source: $('#poID').val(),
+            Items:Items
+        };
+        $.ajax({
+            type: 'POST',
+            url: '@Url.RouteUrl("GRNSave")',
+            traditional: true,
+            contentType: "application/json; charset=utf-8",
+            data: JSON.stringify({ grn: grnHnItems }),
+            dataType: 'json',
+            success: function (JsonObj) {
+                if (JsonObj.IsSuccess) {
+                    Swal.fire({
+                        position: 'top-end',
+                        icon: 'success',
+                        title: JsonObj.SvrMsgBody,
+                        showConfirmButton: false,
+                        timer: 1500,
+                        toast: true,
+                    })
+                    $('#grnCode').val(JsonObj.code)
+                }
+                else {
+                    Swal.fire({
+                        position: 'top-end',
+                        icon: 'error',
+                        title: JsonObj.SvrMsgBody,
+                        showConfirmButton: false,
+                        timer: 1500,
+                        toast: true,
+                    })
+                }
+            }
+        });
+    });
+    function removeItem(id)
+    {
+        Items = Items.filter(function (elem) {
+            return elem.Item_ID !== id;
+        });
+        AddDatatoGrid();
+    }
+
+    function PreLoadItmes()
+    {
+        var found = false;
+        for (var x = 0; x < Items.length; x++) {
+            if (Items[x].Item_ID == $('#item').val()) {
+                var tmpq = Items[x].Item_Qty;
+                Items[x].Item_Qty = parseInt(tmpq) + parseInt($('#Qty').val());
+                Items[x].Item_Value = Items[x].Item_Price * Items[x].Item_Qty;
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            Items.push({
+                Item_ID: $('#item').val(),
+                Item_Code: $('#itmCode').val(),
+                Item_Name: $("#item option:selected").text(),
+                Item_Qty: $('#Qty').val(),
+                Item_Price: $('#itmPrice').val(),
+                Item_Value: $('#Qty').val() * $('#itmPrice').val(),
+            });
+
+        }
+    } 
+    function AddDatatoGrid()
+    {
+        var t = $('#tbItems').DataTable();
+        t.clear().draw();
+        Items.forEach(function (itm, ind) {
+            {
+                t.row.add([
+                  itm.Item_ID,
+                  itm.Item_Code,
+                  itm.Item_Name,
+                  itm.Item_Qty,
+                  itm.Item_Price,
+                  itm.Item_Value,
+                  '<a href="#" data-item-id="' + itm.Item_ID + '"><i class="fas fa-trash-alt rmvBtn" style="color:Tomato" value="' + itm.Item_ID + '"></i></a>'
+                ]).draw(false);
+            }
+        });
+       
+    }
+
+    function ValidateInputs() {
+        var msg = "";
+        if ($("#item option:selected").val() == 0) {
+            msg = "Please Select Item"
+        }
+        else if ($('#Qty').val() == '' || parseFloat($('#Qty').val()) <= 0) {
+            msg = "Item Qty Can't Be Empty Or Zero!"
+        }
+        else if ($('#itmPrice').val() == '' || parseFloat($('#itmPrice').val()) <= 0) {
+            msg = "Item Price Can't Be Empty Or Zero!"
+        }
+
+        return msg;
+    }
+
+    function LoadActiveItems() {
+        $('select[name="GRN_D_Item"]').append('<option value="0"> - Select Item - </option>');
+        $.ajax({
+            type: 'POST',
+            url: '@Url.RouteUrl("GetItemActive")',
+            success: function (JsonObj) {
+                JsonObj.data.forEach(function (itm, ind) {
+                    $('select[name="GRN_D_Item"]').append('<option value="' + itm.ItemID + '">' + itm.ItemName + '</option>');
+                });
+            }
+        });
+
+    }
+
+    function LoadActiveLocations() {
+        $('select[name="GRN_H_Location"]').append('<option value="0"> - Select Location- </option>');
+        $.ajax({
+            type: 'POST',
+            url: '@Url.RouteUrl("GetLocationActive")',
+            success: function (JsonObj) {
+                JsonObj.data.forEach(function (itm, ind) {
+                    $('select[name="GRN_H_Location"]').append('<option value="' + itm.LocationID + '">' + itm.LocationName + '</option>');
+                });
+            }
+        });
+    }
+
+    function LoadActiveSuppliers() {
+        $('select[name="GRN_H_Supplier"]').append('<option value="0"> - Select Supplier- </option>');
+        $.ajax({
+            type: 'POST',
+            url: '@Url.RouteUrl("GetSuppliersActive")',
+            success: function (JsonObj) {
+                JsonObj.data.forEach(function (itm, ind) {
+                    $('select[name="GRN_H_Supplier"]').append('<option value="' + itm.SupplierID + '">' + itm.SupplierName + '</option>');
+                });
+            }
+        });
+    }
+
+    function LoadItem() {
+        $.ajax({
+            type: 'POST',
+            url: '@Url.RouteUrl("GetItemByCode")',
+            data: { Item_Id: $('#item').val() },
+            success: function (JsonObj) {
+                $('#itmCode').val(JsonObj.data[0].ItemCode);
+                $('#itmPrice').val(JsonObj.data[0].ItemPrice);
+            }
+        });
+    }
+
+    function LoadItemByCode() {
+        $.ajax({
+            type: 'POST',
+            url: '@Url.RouteUrl("GetItemByCode")',
+            data: {
+                Item_code: $('#itmCode').val()
+                },
+            success: function (JsonObj) {
+                if (JsonObj.data.length == 0) {
+                    Swal.fire({
+                        position: 'top-end',
+                        icon: 'error',
+                        title: "Invalid Item Code",
+                        showConfirmButton: false,
+                        timer: 2500,
+                        toast: true,
+                    });
+                }
+                else {
+                    $('#itmPrice').val(JsonObj.data[0].ItemPrice);
+                    $("#item").val(JsonObj.data[0].ItemID);
+                }
+            }
+        });
+    }
+    function restFileds() {
+        $('#grnSupplier').val(),
+        $('#grnCode').val('');
+        $('#grnLocation').val(0);
+        $('#grnSupplier').val(0);
+        $('#itmCode').val('');
+        $('#item').val(0);
+        $('#Qty').val('0.00');
+        $('#itmPrice').val('0.00');
+        Items = [];
+        $('#tbItems').DataTable().clear().draw();
+    }
+
+
+    //Model Funtions
+    $(document).on('click', '#btnSearch', function (e) {
+        $.ajax({
+            type: 'POST',
+            url: '@Url.RouteUrl("GRNGetAll")',
+            success: function (JsonObj) {
+                var tablePO = $('#tbGRN').DataTable();
+                tablePO.clear().draw();
+                JsonObj.data.forEach(function (itm, ind) {
+                    tablePO.row.add([
+                        itm.GRN_ID,
+                        itm.GRN_Code,
+                        itm.GRN_Date,
+                        itm.GRN_Amount
+                    ]).draw(false);
+                });
+            }
+        })
+    });
+
+    function LoadGRN(ID) {
+        restFileds();
+        $.ajax({
+            type: 'POST',
+            url: '@Url.RouteUrl("SelectGRN")',
+            data: { GRN_ID: ID },
+            success: function (JsonObj) {
+                $('#grnID').val(JsonObj.data.GRN_H_Id);
+                $('#grnCode').val(JsonObj.data.GRN_H_Code);
+                $('#grnLocation').val(JsonObj.data.GRN_H_Location);
+                $('#grnSupplier').val(JsonObj.data.GRN_H_Supplier);
+
+                JsonObj.data.Items.forEach(function (itm, ind) {
+                    Items.push({
+                        Item_ID: itm.Item_ID,
+                        Item_Code: itm.Item_Code,
+                        Item_Name: itm.Item_Name,
+                        Item_Qty: itm.Item_Qty,
+                        Item_Price: itm.Item_Price,
+                        Item_Value: itm.Item_Value,
+                    });
+                });
+                AddDatatoGrid();
+
+                $("#modalGRNSearch .close").click();
+
+            }
+        });
+    }
+
+
+    //PO Funtions
+    $(document).on('click', '#btnLoadPO', function (e) {
+        $.ajax({
+            type: 'POST',
+            url: '@Url.RouteUrl("POGetAll")',
+            data: { IsComplete: 0 },
+            success: function (JsonObj) {
+                var tablePO = $('#tbPO').DataTable();
+                tablePO.clear().draw();
+                JsonObj.data.forEach(function (itm, ind) {
+                    tablePO.row.add([
+                        itm.PO_ID,
+                        itm.PO_Code,
+                        itm.PO_Date,
+                        itm.PO_Amount
+                    ]).draw(false);
+                });
+            }
+        })
+    });
+
+    function LoadPO(ID) {
+        restFileds();
+        $.ajax({
+            type: 'POST',
+            url: '@Url.RouteUrl("SelectPO")',
+            data: { PO_ID: ID },
+            success: function (JsonObj) {
+                $('#grnLocation').val(JsonObj.data.PO_H_Location);
+                $('#grnSupplier').val(JsonObj.data.PO_H_Supplier); 
+                $('#poID').val(JsonObj.data.PO_H_ID);
+
+                JsonObj.data.Items.forEach(function (itm, ind) {
+                    Items.push({
+                        Item_ID: itm.Item_ID,
+                        Item_Code: itm.Item_Code,
+                        Item_Name: itm.Item_Name,
+                        Item_Qty: itm.Item_Qty,
+                        Item_Price: itm.Item_Price,
+                        Item_Value: itm.Item_Value,
+                    });
+                });
+                AddDatatoGrid();
+
+                $("#modalLoadPO .close").click();
+
+            }
+        });
+    }
+</script>
+
+    }
+

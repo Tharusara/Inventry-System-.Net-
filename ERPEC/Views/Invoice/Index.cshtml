@@ -1,0 +1,510 @@
+﻿
+@{
+    ViewBag.Title = "Index";
+}
+
+<form role="form" id="formInvoice">
+    <div class="card-body">
+        <div class="row">
+            <div class="form-group col-md-2">
+                <label for="invCode">Invoice Code</label>
+                <input type="text" class="form-control" id="invCode" name="INV_Code" readonly>
+                <input type="hidden" class="form-control" id="invID" name="INV_HID" value="0">
+            </div>
+            <div class="form-group col-md-10">
+                <label>Select Location</label>
+                <select class="form-control" name="INV_Location" id="invLocation"></select>
+            </div>
+        </div>
+        <div class="row">
+            <div class="form-group col-md-2">
+                <label for="itmCode">Item Code</label>
+                <input type="text" class="form-control" id="itmCode" name="Item_code">
+            </div>
+            <div class="form-group col-md-6">
+                <label>Select Item</label>
+                <select class="form-control" name="INV_D_Item_ID" id="item"></select>
+            </div>
+            <div class="form-group col-md-1">
+                <label for="Qty">Item Qty</label>
+                <input type="text" class="form-control" id="Qty" name="itm_qty" value="0.00">
+            </div>
+            <div class="form-group col-md-1">
+                <label for="itmPrice">Item Price</label>
+                <input type="text" class="form-control" id="itmPrice" name="itmPrice" value="0.00">
+            </div>
+            <div class="form-group col-md-1">
+                <label for="itmStock">In Stock</label>
+                <input type="text" class="form-control" id="itmStock" name="itm_Stock" value="0.00">
+            </div>
+            <div class="form-group col-md-1" style="margin-top: 15px;margin-bottom: 0px;">
+                <a class="btn btn-app bg-gradient-info" id="btnAddItem">
+                    <i class="fas fa-plus"></i>Add
+                </a>
+            </div>
+
+        </div>
+    </div>
+    <!-- /.card-body -->
+
+    <div class="card-footer">
+        <div class="row">
+            <div class="col-md-4">
+                <button type="button" class="btn btn-block bg-gradient-success btn-lg" id="btnSave">Save Invoice</button>
+            </div>
+            <div class="col-md-4">
+                <button type="button" class="btn btn-block bg-gradient-primary btn-lg" id="btnNew">New Invoice</button>
+            </div>            
+            <div class="col-md-4">
+                <button type="button" class="btn btn-block bg-gradient-info btn-lg" id="btnSearch" data-toggle="modal" data-target="#modalINVSearch">Search Invoice</button>
+            </div>
+            
+        </div>
+    </div>
+</form>
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Invoice Items</h3>
+    </div>
+    <!-- /.card-header -->
+    <div class="card-body">
+        <div id="tbsinvoice_wrapper" class="dataTables_wrapper dt-bootstrap4">
+            <div class="row">
+                <div class="col-sm-12">
+                    <table id="tbItems" class="hover" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Item ID</th>
+                                <th>Item Code</th>
+                                <th>Item Name</th>
+                                <th>Item Qty</th>
+                                <th>Item Price</th>
+                                <th>Item Value</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /.card-body -->
+</div>
+
+<div class="modal fade" id="modalINVSearch" tabindex="-1" role="dialog" aria-labelledby="modalINVSearchTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="f">Search Invoice</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="card">
+                    <div class="card-body">
+                        <div id="tbItems_wrapper" class="dataTables_wrapper dt-bootstrap4">
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <table id="tbINV" class="hover" style="width:100%">
+                                        <thead>
+                                            <tr>
+                                                <th>INV ID</th>
+                                                <th>Invoice Code</th>
+                                                <th>Invoice Date</th>
+                                                <th>Invoice Value</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- /.card-body -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section FooterScripts{
+    <script type="text/javascript">
+        var Items = [];
+
+        $(document).ready(function () {
+            LoadActiveLocations();
+
+
+            var table=$('#tbItems').DataTable({
+                "columnDefs": [
+                    {
+                        "targets": [0],
+                        "visible": false,
+                        "searchable": false,
+                    },
+                    {
+                        "targets": [1],
+                        className: 'dt-head-center',
+                    },
+                    {
+                        "targets": [2],
+                        className: 'dt-head-center',
+                    },
+                    {
+                        "targets": [3],
+                        className: 'dt-head-center dt-body-right',
+                        render: $.fn.dataTable.render.number(',', '.', 2),
+                    },
+                    {
+                        "targets": [4],
+                        className: 'dt-head-center dt-body-right',
+                        render: $.fn.dataTable.render.number(',', '.', 2, 'Rs.'),
+                    },
+                    {
+                        "targets": [5],
+                        className: 'dt-head-center dt-body-right',
+                        render: $.fn.dataTable.render.number(',', '.', 2, 'Rs.'),
+                    },
+                    {
+                        "targets": [6],
+                        className: 'dt-head-center dt-body-center',
+                    }
+                ]
+            });
+
+            $('#tbItems tbody').on('click', '.rmvBtn', function () {
+                var da = table.row({ selected: true }).data();
+                removeItem(da[0]);
+            });
+
+            //Modal
+            var tableInv = $('#tbINV').DataTable({
+                "columnDefs": [
+                    {
+                        "targets": [0],
+                        "visible": false,
+                        "searchable": false,
+                    }
+                ]
+            });
+            $('#tbINV tbody').on('click', 'tr', function () {
+                var da = tableInv.row(this).data();
+                LoadINV(da[0]);
+
+            });
+        });
+
+        $(document).on('change', 'select[name="INV_Location"]', function (e) {
+            e.preventDefault();
+            if ($("#invLocation option:selected").val() != 0) {
+                clearItem();
+                LoadActiveItems($("#invLocation option:selected").val());
+            }
+        });
+
+        $(document).on('change', 'select[name="INV_D_Item_ID"]', function (e) {
+            e.preventDefault();
+            if ($("#item option:selected").val() != 0) {
+                LoadItem();
+            }
+        });
+
+        $(document).on('keypress', '#itmCode', function (e) {
+            if (e.which == 13) {
+                e.preventDefault();
+                if ($('#itmCode').val() == '')
+                    Swal.fire({
+                        position: 'top-end',
+                        icon: 'error',
+                        title: "Please Enter Item Code",
+                        showConfirmButton: false,
+                        timer: 2500,
+                        toast: true,
+                    });
+                else {
+                    LoadItemByCode();
+                }
+            }
+        });
+
+        $(document).on('click', '#btnAddItem', function (e) {
+            e.preventDefault();
+            var msg = ValidateInputs();
+            if (msg != "") {
+                Swal.fire({
+                    position: 'top-end',
+                    icon: 'error',
+                    title: msg,
+                    showConfirmButton: false,
+                    timer: 2500,
+                    toast: true,
+                });
+            }
+            else {
+                PreLoadItmes();
+            }
+            AddDatatoGrid();
+        });
+
+        $(document).on('click', '#btnSave ', function (e) {
+
+            var invoiceItems = {
+                INV_Location: $('#invLocation').val(),
+                Items: Items
+            };
+            $.ajax({
+                type: 'POST',
+                url: '@Url.RouteUrl("InvoiceSave")',
+                traditional: true,
+                contentType: "application/json; charset=utf-8",
+                data: JSON.stringify({ Invoice: invoiceItems }),
+                dataType: 'json',
+                success: function (JsonObj) {
+                    if (JsonObj.IsSuccess) {
+                        Swal.fire({
+                            position: 'top-end',
+                            icon: 'success',
+                            title: JsonObj.SvrMsgBody,
+                            showConfirmButton: false,
+                            timer: 1500,
+                            toast: true,
+                        })
+                        $('#invCode').val(JsonObj.code);
+                    }
+                    else {
+                        Swal.fire({
+                            position: 'top-end',
+                            icon: 'error',
+                            title: JsonObj.SvrMsgBody,
+                            showConfirmButton: false,
+                            timer: 1500,
+                            toast: true,
+                        })
+                    }
+                }
+            });
+        });
+
+        $(document).on('click', '#btnNew', function (e) {
+            restFileds();
+        });
+
+        function LoadActiveLocations() {
+            $('select[name="INV_Location"]').append('<option value="0"> - Select Location- </option>');
+            $.ajax({
+                type: 'POST',
+                url: '@Url.RouteUrl("GetLocationActive")',
+                success: function (JsonObj) {
+                    JsonObj.data.forEach(function (itm, ind) {
+                        $('select[name="INV_Location"]').append('<option value="' + itm.LocationID + '">' + itm.LocationName + '</option>');
+                    });
+                }
+            });
+        }
+
+        function LoadActiveItems(loc_id) {
+            $('select[name = "INV_D_Item_ID"]').find('option').remove().end();
+            
+            $('select[name="INV_D_Item_ID"]').append('<option value="0"> - Select Item - </option>');
+            $.ajax({
+                type: 'POST',
+                url: '@Url.RouteUrl("LoadItems")',
+                data: { Itm_Loc: loc_id },
+                success: function (JsonObj) {
+                    JsonObj.data.forEach(function (itm, ind) {
+                        $('select[name="INV_D_Item_ID"]').append('<option value="' + itm.Item_ID + '">' + itm.Item_Name + '</option>');
+                    });
+                }
+            });
+        }
+
+        function LoadItem() {
+            $.ajax({
+                type: 'POST',
+                url: '@Url.RouteUrl("LoadItems")',
+                data: {
+                        Itm_Loc: $('#invLocation').val(),
+                        Item_Id: $('#item').val()
+                },
+                success: function (JsonObj) {
+                    $('#itmCode').val(JsonObj.data[0].Item_Code); 
+                    $('#itmPrice').val(JsonObj.data[0].Item_Price); 
+                    $('#itmStock').val(JsonObj.data[0].Item_Qty);
+                }
+            });
+        }
+
+        function LoadItemByCode() {
+            $.ajax({
+                type: 'POST',
+                url: '@Url.RouteUrl("LoadItems")',
+                data: {
+                    Itm_Loc: $('#invLocation').val(),
+                    item_code: $('#itmCode').val(),
+                },
+                success: function (JsonObj) {
+                    if (JsonObj.data.length == 0) {
+                        Swal.fire({
+                            position: 'top-end',
+                            icon: 'error',
+                            title: "Invalid Item Code",
+                            showConfirmButton: false,
+                            timer: 2500,
+                            toast: true,
+                        });
+                    }
+                    else {
+                        $('#itmPrice').val(JsonObj.data[0].Item_Price);
+                        $("#item").val(JsonObj.data[0].Item_ID); 
+                        $("#itmStock").val(JsonObj.data[0].Item_Qty);
+                    }
+                }
+            });
+        }
+
+        function clearItem()
+        {
+            $('#itmCode').val('');
+            $('#item').val(0);
+            $('#Qty').val("0.00");
+            $('#itmPrice').val("0.00"); 
+            $('#itmStock').val("0.00");
+        }
+
+        function PreLoadItmes() {
+            var found = false;
+            for (var x = 0; x < Items.length; x++) {
+                if (Items[x].Item_ID == $('#item').val()) {
+                    var tmpq = Items[x].Item_Qty;
+                    Items[x].Item_Qty = parseInt(tmpq) + parseInt($('#Qty').val());
+                    Items[x].Item_Value = Items[x].Item_Price * Items[x].Item_Qty;
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                Items.push({
+                    Item_ID: $('#item').val(),
+                    Item_Code: $('#itmCode').val(),
+                    Item_Name: $("#item option:selected").text(),
+                    Item_Qty: $('#Qty').val(),
+                    Item_Price: $('#itmPrice').val(),
+                    Item_Value: $('#Qty').val() * $('#itmPrice').val(),
+                });
+
+            }
+        }
+
+        function AddDatatoGrid() {
+            var t = $('#tbItems').DataTable();
+            t.clear().draw();
+            Items.forEach(function (itm, ind) {
+                {
+                    t.row.add([
+                      itm.Item_ID,
+                      itm.Item_Code,
+                      itm.Item_Name,
+                      itm.Item_Qty,
+                      itm.Item_Price,
+                      itm.Item_Value,
+                      '<a href="#" data-item-id="' + itm.Item_ID + '"><i class="fas fa-trash-alt rmvBtn" style="color:Tomato" value="' + itm.Item_ID + '"></i></a>'
+                    ]).draw(false);
+                }
+            });
+
+        }
+
+        function ValidateInputs() {
+            var msg = "";
+            if ($("#item option:selected").val() == 0) {
+                msg = "Please Select Item";
+            }
+            else if ($('#Qty').val() == '' || parseFloat($('#Qty').val()) <= 0) {
+                msg = "Item Qty Can't Be Empty Or Zero!";
+            }
+            else if ($('#itmPrice').val() == '' || parseFloat($('#itmPrice').val()) <= 0) {
+                msg = "Item Price Can't Be Empty Or Zero!";
+            }
+
+            else if (parseFloat($('#Qty').val()) > parseFloat($('#itmStock').val())) {
+                msg = "Sorry Quantity Is Not Enough";
+            }
+
+            return msg;
+        }
+
+        function removeItem(id) {
+            Items = Items.filter(function (elem) {
+                return elem.Item_ID !== id;
+            });
+            AddDatatoGrid();
+        }
+
+        function restFileds() {
+            $('#invCode ').val('');
+            $('#itmCode').val('');
+            $('#invLocation').val(0);
+            Items = [];
+            $('#tbItems').DataTable().clear().draw();
+            clearItem();
+        }
+
+        //Model Funtions
+        $(document).on('click', '#btnSearch', function (e) {
+            $.ajax({
+                type: 'POST',
+                url: '@Url.RouteUrl("InvoiceGetAll")',
+                success: function (JsonObj) {
+                    var tableINV = $('#tbINV').DataTable();
+                    tableINV.clear().draw();
+                    JsonObj.data.forEach(function (itm, ind) {
+                        tableINV.row.add([
+                            itm.INV_ID,
+                            itm.INV_Code,
+                            itm.INV_Date,
+                            itm.INV_Amount
+                        ]).draw(false);
+                    });
+                }
+            })
+        });
+
+        function LoadINV(ID) {
+            restFileds();
+            $.ajax({
+                type: 'POST',
+                url: '@Url.RouteUrl("SelectInvoice")',
+                data: { INV_ID: ID },
+                success: function (JsonObj) {
+                    $('#invLocation').val(JsonObj.data.INV_Location);
+                    $('#invCode').val(JsonObj.data.INV_Code);
+                    $('#invID').val(JsonObj.data.INV_HID);
+
+                    JsonObj.data.Items.forEach(function (itm, ind) {
+                        Items.push({
+                            Item_ID: itm.Item_ID,
+                            Item_Code: itm.Item_Code,
+                            Item_Name: itm.Item_Name,
+                            Item_Qty: itm.Item_Qty,
+                            Item_Price: itm.Item_Price,
+                            Item_Value: itm.Item_Value,
+                        });
+                    });
+                    AddDatatoGrid();
+
+                    $("#modalINVSearch .close").click();
+
+                }
+            });
+        }
+
+    </script>
+    
+    }

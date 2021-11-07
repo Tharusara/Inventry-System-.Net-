@@ -1,0 +1,144 @@
+﻿
+@{
+    ViewBag.Title = "Index";
+}
+
+<form role="form" id="formInvoice">
+    <div class="card-body">
+        <div class="row d-flex justify-content-center">
+            <div class="form-group col-md-4">
+                <label for="location">Select Location</label>
+                <select class="form-control" name="Location" id="location"></select>
+            </div>
+            <div class="form-group col-md-4">
+                <label for="item">Select Item</label>
+                <select class="form-control" name="ITM_Name" id="item"></select>
+            </div>
+            <div class="form-group col-md-4">
+                <label for="invCode">Select Date Range</label>
+                <input type="text" class="form-control" id="date" name="daterange" />
+            </div>            
+        </div>
+    </div>
+</form>
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title" id="itemhead"></h3>
+    </div>
+    <!-- /.card-header -->
+    <div class="card-body">
+        <div id="docsinvoice_wrapper" class="dataTables_wrapper dt-bootstrap4">
+            <div class="row">
+                <div class="col-sm-12">
+                    <table id="tbdocs" class="hover" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Document Code</th>
+                                <th>Qty</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /.card-body -->
+</div>
+
+@section FooterScripts{
+<script type="text/javascript">
+    $(document).ready(function () {
+        LoadActiveLocations();
+        LoadActiveItems();
+        var table = $('#tbdocs').DataTable({
+            dom: 'Bfrtip',
+            buttons: [{
+                extend: 'excel',
+                className: 'btn  btn-success btn-sm',
+                title: 'Stock Detail List | ERP'
+            }
+            ],
+            "columnDefs": [
+                {
+                    "targets": [0],
+                    className: 'dt-head-center',
+                },
+                {
+                    "targets": [1],
+                    className: 'dt-head-center dt-body-right',
+                    render: $.fn.dataTable.render.number(',', '.', 2),
+                },
+                {
+                    "targets": [2],
+                    className: 'dt-head-center dt-body-right'
+                }
+            ]
+        });
+
+    });
+
+    $(function () {
+        $('#date').daterangepicker({
+            opens: 'center'
+        }, function (start, end, label) {
+            $.ajax({
+                type: 'POST',
+                url: '@Url.RouteUrl("GetBinCard")',
+                data: {
+                    Item: $("#item").val(),
+                    Location: $("#location").val(),
+                    fromdate: start.format('YYYY-MM-DD'),
+                    todate: end.format('YYYY-MM-DD')
+                },
+                success: function (JsonObj) {
+                    var tableBinData = $('#tbdocs').DataTable();
+                    tableBinData.clear().draw();
+                    JsonObj.data.forEach(function (itm, ind) {
+                        tableBinData.row.add([
+                            itm.Doc_Code,
+                            itm.Item_Qty,
+                            itm.Doc_Date,
+                        ]).draw(false);
+                    });
+                    if (JsonObj.data.length!=0)
+                    $("#itemhead").html(JsonObj.data[0].ItemName);
+                }
+            })
+
+        });
+    });
+
+    
+    function LoadActiveLocations() {
+        $('select[name="Location"]').append('<option value="0"> - Select Location- </option>');
+        $.ajax({
+            type: 'POST',
+            url: '@Url.RouteUrl("GetLocationActive")',
+            success: function (JsonObj) {
+                JsonObj.data.forEach(function (itm, ind) {
+                    $('select[name="Location"]').append('<option value="' + itm.LocationID + '">' + itm.LocationName + '</option>');
+                });
+            }
+        });
+    }
+
+    function LoadActiveItems() {
+        
+        $('select[name="ITM_Name"]').append('<option value="0"> - Select Item - </option>');
+        $.ajax({
+            type: 'POST',
+            url: '@Url.RouteUrl("GetAllItems")',
+            success: function (JsonObj) {
+                JsonObj.data.forEach(function (itm, ind) {
+                    $('select[name="ITM_Name"]').append('<option value="' + itm.ItemID + '">' + itm.ItemName + '</option>');
+                });
+            }
+        });
+    }
+
+</script>    
+
+}

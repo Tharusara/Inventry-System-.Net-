@@ -1,0 +1,146 @@
+﻿
+@{
+    ViewBag.Title = "Index";
+}
+
+@{
+    var data = ViewData["Message"];
+}  
+<form role="form" id="formSup">
+    <div class="card-body">
+        <div class="row">
+            <div class="form-group col-md-3">
+                <label for="supCode">Supplier Code</label>
+                <input type="text" class="form-control" id="supCode" name="SUP_code" placeholder="Enter Supplier Code">
+            </div>
+            <div class="form-group col-md-9">
+                <label for="supName">Supplier Name</label>
+                <input type="text" class="form-control" id="supName" name="SUP_name" placeholder="Enter Supplier Name">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="supAddress">Supplier Address</label>
+            <textarea class="form-control" name="SUP_address" id="supAddress" rows="3" placeholder="Enter Location Address"></textarea>
+        </div>
+        <div class="form-group">
+            <label for="supContact">Supplier Contact Number</label>
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                </div>
+                <input type="text" class="form-control" name="SUP_contact" id="supContact" placeholder="Enter Contact Number">
+            </div>
+            <!-- /.input group -->
+        </div>
+
+    </div>
+    <!-- /.card-body -->
+
+    <div class="card-footer">
+        <button type="submit" class="btn btn-block btn-success btn-lg">Save Supplier</button>
+    </div>
+</form>
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Suppliers</h3>
+    </div>
+    <!-- /.card-header -->
+    <div class="card-body">
+        <div id="tbsupplier_wrapper" class="dataTables_wrapper dt-bootstrap4">
+            <div class="row">
+                <div class="col-sm-12">
+                    <table id="tbsupplier" class="hover" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Supplier Code</th>
+                                <th>Supplier Name</th>
+                                <th>Supplier Address</th>
+                                <th>Supplier Contact</th>
+                                <th>Edit</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /.card-body -->
+</div>
+
+@section FooterScripts{
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            
+            LoadSuppliers();
+        });
+
+        $(document).on('submit', '#formSup', function (e) {
+            e.preventDefault();
+
+            $.ajax({
+                type: 'POST',
+                url: '@Url.RouteUrl("SaveSupplier")',
+                data: $(this).serialize(),
+                success: function (JsonObj) {
+                    if (JsonObj.IsSuccess) {
+                        Swal.fire({
+                            position: 'top-end',
+                            icon: 'success',
+                            title: JsonObj.SvrMsgBody,
+                            showConfirmButton: false,
+                            timer: 1500,
+                            toast: true,
+                        })
+                        tableSuppliers.ajax.reload()
+                    }
+                    else {
+                        Swal.fire({
+                            position: 'top-end',
+                            icon: 'error',
+                            title: JsonObj.SvrMsgBody,
+                            showConfirmButton: false,
+                            timer: 1500,
+                            toast: true,
+                        })
+                    }
+                }
+            });
+        });
+
+        var tableSuppliers;
+        function LoadSuppliers() {
+            if (!$.fn.dataTable.isDataTable('#tbsupplier')) {
+                tableSuppliers = $('#tbsupplier').DataTable({
+        
+                    ajax: {
+                        type: 'POST',
+                        url: '@Url.RouteUrl("GetAllSupplier")'
+                    },
+                   
+                    columns: [
+                        { data: "SupplierCode" },
+                        { data: "SupplierName" },
+                        { data: "SupplierAddress" },
+                        { data: "SupplierContact" },
+                    ],
+                    columnDefs: [{
+                        targets: 4,
+                        data: "SupplierID",
+                        render: function (data, type, row, meta) {
+                            return '<a href="#" data-item-id="' + data + '"><i class="fa fa-edit"></i></a>';
+                        }
+                    }]
+                });
+            }
+            else {
+                tableSuppliers.ajax.reload();
+            }
+        }
+
+    </script>
+}

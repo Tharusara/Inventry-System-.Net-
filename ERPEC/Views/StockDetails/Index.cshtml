@@ -1,0 +1,124 @@
+﻿
+@{
+    ViewBag.Title = "Index";
+}
+
+<form role="form" id="formLoca">
+    <div class="card-body">
+        <div class=" d-flex justify-content-center">
+            <div class="form-group col-md-5">
+                <label>Select Location</label>
+                <select class="form-control" name="Location" id="ItemLocation"></select>
+            </div>
+            <div class="col-md-2"style="margin-top:1.5em">
+                <button type="button" id="btnload" class="btn btn-block bg-gradient-success btn-lg">Load</button>
+            </div>
+        </div>
+        
+    </div>
+    <!-- /.card-body -->
+
+    <div class="card-footer">
+        <div class="row">
+            
+        </div>
+    </div>
+</form>
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Stock Listing</h3>
+    </div>
+    <!-- /.card-header -->
+    <div class="card-body">
+        <div id="stockdetail_wrapper" class="dataTables_wrapper dt-bootstrap4">
+            <div class="row">
+                <div class="col-sm-12">
+                    <table id="tbitems" class="hover" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Item Code</th>
+                                <th>Item Name</th>
+                                <th>Qty</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /.card-body -->
+</div>
+
+@section FooterScripts{
+    <script type="text/javascript">
+        $(document).ready(function () {
+            LoadActiveLocations();
+            var table = $('#tbitems').DataTable({
+                dom: 'Bfrtip',
+                buttons: [{
+                    extend: 'excel',
+                    className: 'btn  btn-success btn-sm',
+                    title: 'Stock Detail List | ERP'
+                }
+                ],
+                "columnDefs": [
+                    {
+                        "targets": [0],
+                        className: 'dt-head-center',
+                    },
+                    {
+                        "targets": [1],
+                        className: 'dt-head-center'                        
+                    },
+                    {
+                        "targets": [2],
+                        className: 'dt-head-center dt-body-right',
+                        render: $.fn.dataTable.render.number(',', '.', 2),
+                    }
+                ]
+            });
+        });
+
+        function LoadActiveLocations() {
+            $('select[name="Location"]').append('<option value="0"> - Select Location- </option>');
+            $.ajax({
+                type: 'POST',
+                url: '@Url.RouteUrl("GetLocationActive")',
+                success: function (JsonObj) {
+                    JsonObj.data.forEach(function (itm, ind) {
+                        $('select[name="Location"]').append('<option value="' + itm.LocationID + '">' + itm.LocationName + '</option>');
+                    });
+                }
+            });
+        }
+
+        $(document).on('click', '#btnload', function (e) {
+            $.ajax({
+                type: 'POST',
+                url: '@Url.RouteUrl("GetStockItems")',
+                data: {
+                    Loc_ID: $("#ItemLocation").val()
+                },
+                success: function (JsonObj) {
+                    var tableItems = $('#tbitems').DataTable();
+                    tableItems.clear().draw();
+                    JsonObj.data.forEach(function (itm, ind) {
+                        tableItems.row.add([
+                            itm.ItemCode,
+                            itm.ItemName,
+                            itm.Qty,
+                        ]).draw(false);
+                    });
+                }
+            });
+        });
+
+
+    </script>
+
+
+
+
+}

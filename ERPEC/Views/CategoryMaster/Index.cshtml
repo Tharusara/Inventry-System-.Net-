@@ -1,0 +1,190 @@
+﻿
+@{
+    ViewBag.Title = "Index";
+}
+<form role="form" id="formCat">
+    <div class="card-body">
+        <div class="row">
+            <div class="form-group col-md-3">
+                <label for="catCode">Category Code</label>
+                <input type="text" class="form-control" id="catCode" name="CAT_code" placeholder="Enter Category Code">
+                <input type="hidden" class="form-control" id="catID" name="CAT_id" value="0">
+            </div>
+            <div class="form-group col-md-9">
+                <label for="catName">Category Name</label>
+                <input type="text" class="form-control" id="catName" name="CAT_Name" placeholder="Enter Category Name">
+            </div>
+        </div>
+    </div>
+    <!-- /.card-body -->
+
+    <div class="card-footer">
+        <div class="row">
+            <div class="col-md-6">
+                <button type="submit" class="btn btn-block bg-gradient-success btn-lg">Save Category</button>
+            </div>
+            <div class="col-md-6">
+                <button type="button" class="btn btn-block bg-gradient-info btn-lg" id="btnNew">New</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Catagoreis</h3>
+    </div>
+    <!-- /.card-header -->
+    <div class="card-body">
+        <div id="tbcategory_wrapper" class="dataTables_wrapper dt-bootstrap4">
+            <div class="row">
+                <div class="col-sm-12">
+                    <table id="tbcategory" class="hover" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Category Code</th>
+                                <th>Category Name</th>
+                                <th>Edit</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /.card-body -->
+</div>
+
+
+@section FooterScripts{
+    
+ <script type="text/javascript">
+     $(document).ready(function () {
+         $("#masterfiles").addClass("menu-open");
+         $("#master").addClass("active");
+        LoadCategories();
+
+        var table = $('#tbcategory').DataTable();
+        $('#tbcategory tbody').on('click', 'tr', function () {
+            var da = table.row(this).data();
+            LoadCategory(da.CATID);
+        });
+    });
+
+    $(document).on('submit', '#formCat', function (e) {
+        e.preventDefault();
+        if ($('#catID').val() != 0) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You want to update this Catagory!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes',
+                cancelButtonText: 'No'
+            }).then(function (res) {
+                if (res.isConfirmed)
+                    saveCategories();
+            })
+        }
+        else
+            saveCategories();
+
+
+    });
+
+     function saveCategories() {
+         $.ajax({
+             type: 'POST',
+             url: '@Url.RouteUrl("SaveCatagory")',
+             data: $('#formCat').serialize(),
+             success: function (JsonObj) {
+
+                 if (JsonObj.IsSuccess) {
+                     Swal.fire({
+                         position: 'top-end',
+                         icon: 'success',
+                         title: JsonObj.SvrMsgBody,
+                         showConfirmButton: false,
+                         timer: 1500,
+                         toast: true,
+                     })
+                     LoadCategories();
+                 }
+                 else {
+                     Swal.fire({
+                         position: 'top-end',
+                         icon: 'error',
+                         title: JsonObj.SvrMsgBody,
+                         showConfirmButton: false,
+                         timer: 1500,
+                         toast: true,
+                     })
+                 }
+             }
+         });
+     }
+
+
+    var tableCategories;
+    function LoadCategories() {
+        if (!$.fn.dataTable.isDataTable('#tbcategory')) {
+            tableCategories = $('#tbcategory').DataTable({
+
+                ajax: {
+                    type: 'POST',
+                    url: '@Url.RouteUrl("GetAllCatagories")'
+                },
+
+                columns: [
+                    { data: "CATCode" },
+                    { data: "CATName" },
+                ],
+                columnDefs: [{
+                    targets: 2,
+                    data: "CATID",
+                    render: function (data, type, row, meta) {
+                        return '<a href="#" data-item-id="' + data + '"><i class="fa fa-edit"></i></a>';
+                    }
+                }]
+            });
+        }
+        else {
+            tableCategories.ajax.reload();
+        }
+    }
+
+     function LoadCategory(ID) {
+         $.ajax({
+             type: 'POST',
+             url: '@Url.RouteUrl("GetAllCatagories")',
+             data: {
+                 catID: ID
+             },
+             success: function (JsonObj) {
+                 if (JsonObj.data.length != 0) {
+                     $('#catID').val(JsonObj.data[0].CATID);
+                     $('#catCode').val(JsonObj.data[0].CATCode);
+                     $('#catName').val(JsonObj.data[0].CATName);
+                 }
+             }
+         });
+     }
+
+     $(document).on('click', '#btnNew', function (e) {
+         clearCatagory();
+     });
+
+     function clearCatagory()
+     {
+         $('#catID').val(0);
+         $('#catCode').val('');
+         $('#catName').val('');
+     }
+</script>
+
+    }

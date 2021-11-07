@@ -1,0 +1,254 @@
+﻿
+@{
+    ViewBag.Title = "Index";
+}
+
+<form role="form" id="formItem">
+    <div class="card-body">
+        <div class="row">
+            <div class="form-group col-md-3">
+                <label for="itmCode">Item Bar Code</label>
+                <input type="text" class="form-control" id="itmCode" name="ITEM_code" placeholder="Enter Item Code" value="">
+                <input type="hidden" class="form-control" id="itmID" name="ITEM_ID" value="0">
+            </div>
+            <div class="form-group col-md-9">
+                <label for="itmName">Item Name</label>
+                <input type="text" class="form-control" id="itmName" name="ITEM_name" placeholder="Enter Item Name">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Select Catagory</label>
+            <select class="form-control" name="ITEM_cat" id="itmCat"></select>
+        </div>
+        <div class="form-group">
+            <label for="itmPrice">Item Selling Price</label>
+            <input type="text" class="form-control" id="itmPrice" name="ITEM_price" placeholder="Enter Selling Price">
+        </div>
+        <div class="form-group">
+            <label for="itmCost">Item Cost</label>
+            <input type="text" class="form-control" id="itmCost" name="ITEM_cost" placeholder="Enter Item Cost">
+        </div>
+        <div class="form-group">
+            <label for="itmMinqty">Item Min Qty</label>
+            <input type="text" class="form-control" id="itmMinqty" name="ITEM_minqty" placeholder="Enter Item Name">
+        </div>
+        <div class="form-check">
+            <input type="checkbox" class="form-check-input" id="itmAtive" name="ITEM_activechq" value="true">
+                <label class="form-check-label" for="locAtive">Active</label>
+            </div>
+    </div>
+    <!-- /.card-body -->
+
+    <div class="card-footer">
+        <div class="row">
+            <div class="col-md-6">
+                <button type="submit" class="btn btn-block bg-gradient-success btn-lg">Save Item</button>
+            </div>
+            <div class="col-md-6">
+                <button type="button" class="btn btn-block bg-gradient-info btn-lg" id="btnNew">New</button>
+            </div>            
+        </div>
+    </div>
+</form>
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Suppliers</h3>
+    </div>
+    <!-- /.card-header -->
+    <div class="card-body">
+        <div id="tbItems_wrapper" class="dataTables_wrapper dt-bootstrap4">
+            <div class="row">
+                <div class="col-sm-12">
+                    <table id="tbItems" class="hover" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Item ID</th>
+                                <th>Item Code</th>
+                                <th>Item Name</th>
+                                <th>Item Cat</th>
+                                <th>Item Cost</th>
+                                <th>Item Price</th>
+                                <th>Item Min Qty</th>
+                                <th>Edit</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /.card-body -->
+</div>
+
+
+
+@section FooterScripts{
+    
+     <script type="text/javascript">
+
+         $(document).ready(function () {
+             LoadCatagories();
+             LoadItems();
+
+             var table = $('#tbItems').DataTable();
+             $('#tbItems tbody').on('click','tr', function () {
+                 var da = table.row(this).data();
+                 LoadItem(da.ItemID)
+             });
+         });
+
+         
+
+         function LoadCatagories() {
+             $('select[name="ITEM_cat"]').append('<option value=""> - Select - </option>');
+             $.ajax({
+                 type: 'POST',
+                 url: '@Url.RouteUrl("GetAllCatagories")',
+                 success: function (JsonObj) {
+                     JsonObj.data.forEach(function (itm, ind) {
+                         $('select[name="ITEM_cat"]').append('<option value="' + itm.CATID + '">' + itm.CATName + '</option>');
+                     });
+                 }
+             });
+         }
+
+
+         var tableItems;
+
+    function LoadItems() {
+        if (!$.fn.dataTable.isDataTable('#tbItems')) {
+            tableItems = $('#tbItems').DataTable({
+
+                ajax: {
+                    type: 'POST',
+                    url: '@Url.RouteUrl("GetAllItems")'
+                },
+
+               
+                columns: [
+                    { data: "ItemID" },
+                    { data: "ItemCode" },
+                    { data: "ItemName" },
+                    { data: "ItemCatname" },
+                    { data: "ItemCost" },
+                    { data: "ItemPrice" },
+                    { data: "ItemMinQty" },
+                ],
+                columnDefs: [
+                    {
+                        "targets": [0],
+                        "visible": false,
+                        "searchable": false,
+                    },
+                    {
+                    targets: 7,
+                    data: "ItemID",
+                    render: function (data, type, row, meta) {
+                        return '<a href="#" data-item-id="' + data + '"><i class="fa fa-edit editBtn" value="' + data + '"></i></a>';
+                    }
+                }]
+            });
+        }
+        else {
+            tableItems.ajax.reload();
+        }
+    }
+
+         $(document).on('submit', '#formItem', function (e) {
+             e.preventDefault();
+             if ($('#itmID').val() != 0) {
+                 Swal.fire({
+                     title: 'Are you sure?',
+                     text: "You want to update this Item!",
+                     icon: 'warning',
+                     showCancelButton: true,
+                     confirmButtonColor: '#3085d6',
+                     cancelButtonColor: '#d33',
+                     confirmButtonText: 'Yes',
+                     cancelButtonText: 'No'
+                 }).then(function (res) {
+                     if (res.isConfirmed)
+                         saveItem();
+                 })
+             }
+             else
+                 saveItem();
+         });
+
+         function saveItem()
+         {
+             $.ajax({
+                 type: 'POST',
+                 url: '@Url.RouteUrl("SaveItem")',
+                 data: $('#formItem').serialize(),
+                 success: function (JsonObj) {
+                     if (JsonObj.IsSuccess) {
+                         Swal.fire({
+                             position: 'top-end',
+                             icon: 'success',
+                             title: JsonObj.SvrMsgBody,
+                             showConfirmButton: false,
+                             timer: 1500,
+                             toast: true,
+                         })
+                         tableItems.ajax.reload();
+                     }
+                     else {
+                         Swal.fire({
+                             position: 'top-end',
+                             icon: 'error',
+                             title: JsonObj.SvrMsgBody,
+                             showConfirmButton: false,
+                             timer: 1500,
+                             toast: true,
+                         })
+                     }
+                 }
+             });
+         }
+
+         
+         function LoadItem(ID) {
+             $.ajax({
+                 type: 'POST',
+                 url: '@Url.RouteUrl("GetAllItems")',
+                 data: {
+                     Item_Id: ID
+                 },
+                 success: function (JsonObj) {
+                     if (JsonObj.data.length != 0) {
+                     $('#itmID').val(JsonObj.data[0].ItemID);
+                     $('#itmCode').val(JsonObj.data[0].ItemCode);
+                     $('#itmName').val(JsonObj.data[0].ItemName);
+                     $('#itmCat').val(JsonObj.data[0].ItemCat);
+                     $('#itmPrice').val(JsonObj.data[0].ItemPrice);
+                     $('#itmCost').val(JsonObj.data[0].ItemCost);
+                     $('#itmMinqty').val(JsonObj.data[0].ItemMinQty);
+                     $('#itmAtive').prop('checked', JsonObj.data[0].ItemActive);
+                     }
+                 }
+             });
+         }
+
+         $(document).on('click', '#btnNew', function (e) {
+             clearItem();
+         });
+
+         function clearItem()
+         {
+             $('#itmID').val(0);
+             $('#itmCode').val("");
+             $('#itmName').val("");
+             $('#itmCat').val("");
+             $('#itmPrice').val("");
+             $('#itmCost').val("");
+             $('#itmMinqty').val("");
+             $('#itmAtive').prop('checked', false);
+         }
+     </script>
+    }
+

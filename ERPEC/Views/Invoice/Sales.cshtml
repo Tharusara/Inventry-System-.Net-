@@ -1,0 +1,222 @@
+﻿
+@{
+    ViewBag.Title = "Sales";
+}
+
+<form role="form" id="formInvoice">
+    <div class="card-body">
+        <div class="row d-flex justify-content-center">
+            <div class="form-group col-md-4">
+                <label for="invCode">Select Date Range</label>
+                <input type="text" class="form-control" id="date" name="daterange" />
+            </div>
+            <div class="form-group col-md-4">
+                <label for="invTot">Total Invoice Value</label>
+                <input type="text" class="form-control" id="invTot" name="invTotal" />
+            </div>
+        </div>
+    </div>   
+</form>
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Invoices</h3>
+    </div>
+    <!-- /.card-header -->
+    <div class="card-body">
+        <div id="invsinvoice_wrapper" class="dataTables_wrapper dt-bootstrap4">
+            <div class="row">
+                <div class="col-sm-12">
+                    <table id="tbinv" class="hover" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Invoice ID</th>
+                                <th>Invoice Code</th>
+                                <th>Invoice Date</th>
+                                <th>Invoice Value</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /.card-body -->
+</div>
+
+<div class="row">
+    <div class="card col-md-6">
+        <div class="card-header">
+            <h3 class="card-title">Top 10 Fast Moving Items</h3>
+        </div>
+        <!-- /.card-header -->
+        <div id="fastChart-wrapper">
+            <canvas id="fastChart"></canvas>
+        </div>
+    </div>
+
+    <div class="card col-md-6">
+        <div class="card-header">
+            <h3 class="card-title">Sales Graph</h3>
+        </div>
+        <!-- /.card-header -->
+        <div class="row"></div>
+        <div id="salesChart-wrapper">
+            <canvas id="salesChart"></canvas>
+        </div>
+    </div>
+</div>
+
+
+
+@section FooterScripts{
+<script type="text/javascript">
+    $(document).ready(function () {
+        var table = $('#tbinv').DataTable({
+            "columnDefs": [
+                {
+                    "targets": [0],
+                    "visible": false,
+                    "searchable": false,
+                },
+                {
+                    "targets": [1],
+                    className: 'dt-head-center',
+                },
+                {
+                    "targets": [2],
+                    className: 'dt-head-center',
+                },
+                {
+                    "targets": [3],
+                    className: 'dt-head-center dt-body-right',
+                    render: $.fn.dataTable.render.number(',', '.', 2),
+                }
+            ]
+        });
+      
+    });
+
+    $(function () {
+        $('#date').daterangepicker({
+            opens: 'center'
+        }, function (start, end, label) {
+            getFastMovingItems(start.format('YYYY-MM-DD'), end.format('YYYY-MM-DD'))
+            $.ajax({
+                type: 'POST',
+                url: '@Url.RouteUrl("InvoiceGetAll")',
+                data: {
+                    fromdate: start.format('YYYY-MM-DD'),
+                    todate: end.format('YYYY-MM-DD')
+                },
+                success: function (JsonObj) {
+                    var tableINV = $('#tbinv').DataTable();
+                    var tot = 0;
+                    tableINV.clear().draw();
+                    JsonObj.data.forEach(function (itm, ind) {
+                        tot += itm.INV_Amount;
+                        tableINV.row.add([
+                            itm.INV_ID,
+                            itm.INV_Code,
+                            itm.INV_Date,
+                            itm.INV_Amount
+                        ]).draw(false);
+                    });
+                    $('#invTot').val(parseFloat(tot).toFixed(2));
+                    getsalesgrph(JsonObj)
+                }
+            })
+
+        });
+    });
+
+    function resetCanvas() {
+        $('#fastChart').remove(); // this is my <canvas> element
+        $('#fastChart-wrapper').append('<canvas id="fastChart"><canvas>');
+    }
+
+    function getsalesgrph(JsonObj)
+    {
+        console.log(JsonObj.data);
+        var Items = [];
+        var ItemNames = [];
+
+        JsonObj.data.forEach(function (itm, ind) {
+            Items.push(itm.INV_Amount);
+            
+            ItemNames.push(itm.INV_Date);
+        });
+        console.log(Items);
+        console.log(ItemNames);
+
+        var ctx2 = $("#salesChart");
+
+        var myChart = new Chart(ctx2, {
+            type: 'line',
+            data: {
+                labels: ItemNames,
+                datasets: [{
+                    label: '# of Sales',
+                    data: Items,
+                    fill: false,
+                    backgroundColor: "#007bff",
+                    borderColor: "#007bff",
+                    borderWidth: 3
+                }]
+            },
+            options: { legend: { display: false } }
+        });
+    }
+
+    function getFastMovingItems(fdate, tdate) {
+        resetCanvas();
+        $.ajax({
+            type: 'POST',
+            url: '@Url.RouteUrl("InvoiceFastMoiving")',
+            data: {
+                fromdate: fdate,
+                todate: tdate,
+            },
+            success: function (JsonObj) {
+                
+                var Items = [];
+                var Colors=[];
+                var ItemNames = [];
+
+                JsonObj.data.Items.forEach(function (itm, ind) {
+                    Items.push(itm.Item_Qty);
+
+                    var r = Math.floor(Math.random() * 255);
+                    var g = Math.floor(Math.random() * 200);
+                    var b = Math.floor(Math.random() * 220);
+                    var color = 'rgb(' + r + ', ' + g + ', ' + b + ')';
+                    Colors.push(color);
+
+                    ItemNames.push(itm.Item_Name);
+                });
+                var ctx1 = $("#fastChart");
+
+                var myChart = new Chart(ctx1, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ItemNames,
+                        datasets: [{
+                            label: '# of Items',
+                            data: Items,
+                            backgroundColor:Colors,
+                            
+                            borderWidth: 1
+                        }]
+                    },
+                    options: { legend: { display: false } }
+                });
+
+            }
+        });
+    }
+
+
+   
+</script>
+}
